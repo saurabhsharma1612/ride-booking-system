@@ -24,12 +24,14 @@ public class RideRequest {
     private Point pickupLocation;
 
     @Column(columnDefinition = "Geometry(Point, 4326)")
-    private Point dropLocation;
+    private Point dropOffLocation;
+
+    private Double fare;
 
     @CreationTimestamp
     private LocalDateTime requestedTime;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Rider rider;
 
     @Enumerated(EnumType.STRING)

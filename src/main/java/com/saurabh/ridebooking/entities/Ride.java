@@ -23,15 +23,17 @@ public class Ride {
     private Point pickupLocation;
 
     @Column(columnDefinition = "Geometry(Point, 4326)")
-    private Point dropLocation;
+    private Point dropOffLocation;
+
+    private String otp;
 
     @CreationTimestamp
     private LocalDateTime createdTime;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Rider rider;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Driver driver;
 
     @Enumerated(EnumType.STRING)

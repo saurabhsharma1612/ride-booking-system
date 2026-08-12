@@ -8,8 +8,6 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -21,11 +19,13 @@ public class WalletTransaction {
 
     private Double amount;
 
+    @Enumerated(EnumType.STRING)
     private TransactionType transactionType;
 
+    @Enumerated(EnumType.STRING)
     private TransactionMethod transactionMethod;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Ride ride;
 
     private String transactionId;

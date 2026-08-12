@@ -1,38 +1,52 @@
 package com.saurabh.ridebooking.services.impl;
 
-import com.saurabh.ridebooking.dto.DriverDto;
-import com.saurabh.ridebooking.dto.RideDto;
 import com.saurabh.ridebooking.dto.RideRequestDto;
-import com.saurabh.ridebooking.dto.RiderDto;
-import com.saurabh.ridebooking.services.RiderService;
+import com.saurabh.ridebooking.entities.Driver;
+import com.saurabh.ridebooking.entities.Ride;
+import com.saurabh.ridebooking.entities.RideRequest;
+import com.saurabh.ridebooking.entities.Rider;
+import com.saurabh.ridebooking.entities.enums.RideStatus;
+import com.saurabh.ridebooking.services.RideService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class RideServiceImpl implements RiderService {
+public class RideServiceImpl implements RideService {
+
     @Override
-    public RideRequestDto requestRide(RideRequestDto rideRequestDto) {
+    public Ride getRideById(Long rideId) {
         return null;
     }
 
     @Override
-    public RideDto cancelRide(Long rideId) {
+    public void matchWithDrivers(RideRequestDto rideRequestDto) {
+
+    }
+
+    @Override
+    public Ride createNewRide(RideRequest rideRequest, Driver driver) {
         return null;
     }
 
     @Override
-    public DriverDto rateRider(Long rideId, Integer rating) {
+    public Ride updateRideStatus(Ride ride, RideStatus rideStatus) {
         return null;
     }
 
     @Override
-    public RiderDto getMyProfile() {
+    public Page<Ride> getAllRidesOfRider(
+            Rider rider,
+            PageRequest pageRequest
+    ) {
         return null;
     }
 
     @Override
-    public List<RideDto> getAllMyRides() {
-        return List.of();
+    public Page<Ride> getAllRidesOfDriver(
+            Driver driver,
+            PageRequest pageRequest
+    ) {
+        return null;
     }
 }

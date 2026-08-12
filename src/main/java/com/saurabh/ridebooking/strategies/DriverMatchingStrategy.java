@@ -1,6 +1,5 @@
 package com.saurabh.ridebooking.strategies;
 
-import com.saurabh.ridebooking.dto.DriverDto;
 import com.saurabh.ridebooking.dto.RideRequestDto;
 import com.saurabh.ridebooking.entities.Driver;
 

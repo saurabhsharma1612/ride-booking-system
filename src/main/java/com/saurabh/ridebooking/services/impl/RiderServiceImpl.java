@@ -1,10 +1,20 @@
 package com.saurabh.ridebooking.services.impl;
 
-import com.saurabh.ridebooking.dto.DriverDto;
-import com.saurabh.ridebooking.dto.RideDto;
-import com.saurabh.ridebooking.dto.RideRequestDto;
-import com.saurabh.ridebooking.dto.RiderDto;
+import com.saurabh.ridebooking.dto.*;
+import com.saurabh.ridebooking.entities.RideRequest;
+import com.saurabh.ridebooking.entities.Rider;
+import com.saurabh.ridebooking.entities.User;
+import com.saurabh.ridebooking.entities.enums.RideRequestStatus;
+import com.saurabh.ridebooking.repository.RideRequestRepository;
+import com.saurabh.ridebooking.repository.RiderRepository;
+import com.saurabh.ridebooking.repository.UserRepository;
 import com.saurabh.ridebooking.services.RiderService;
+import com.saurabh.ridebooking.strategies.RideFareCalculationStrategy;
+import com.saurabh.ridebooking.utils.GeometryUtils;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,9 +22,111 @@ import java.util.List;
 @Service
 public class RiderServiceImpl implements RiderService {
 
+    private final RiderRepository riderRepository;
+    private final UserRepository userRepository;
+    private final RideRequestRepository rideRequestRepository;
+    private final ModelMapper modelMapper;
+    private final RideFareCalculationStrategy fareCalculationStrategy;
+    private final GeometryFactory geometryFactory;
+
+    public RiderServiceImpl(
+            RiderRepository riderRepository,
+            UserRepository userRepository,
+            RideRequestRepository rideRequestRepository,
+            ModelMapper modelMapper,
+            RideFareCalculationStrategy fareCalculationStrategy,
+            GeometryFactory geometryFactory
+    ) {
+        this.riderRepository = riderRepository;
+        this.userRepository = userRepository;
+        this.rideRequestRepository = rideRequestRepository;
+        this.modelMapper = modelMapper;
+        this.fareCalculationStrategy = fareCalculationStrategy;
+        this.geometryFactory = geometryFactory;
+    }
+
     @Override
-    public RideRequestDto requestRide(RideRequestDto rideRequestDto) {
-        return null;
+    public RideRequestDto requestRide(
+            RideRequestDto rideRequestDto
+    ) {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "User not found"
+                        )
+                );
+
+        Rider rider = riderRepository.findByUser(user)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Rider profile not found"
+                        )
+                );
+
+        RideRequest rideRequest =
+                modelMapper.map(
+                        rideRequestDto,
+                        RideRequest.class
+                );
+
+        rideRequest.setPickupLocation(
+                GeometryUtils.toPoint(
+                        rideRequestDto.getPickupLocation(),
+                        geometryFactory
+                )
+        );
+
+        rideRequest.setDropOffLocation(
+                GeometryUtils.toPoint(
+                        rideRequestDto.getDropLocation(),
+                        geometryFactory
+                )
+        );
+
+        rideRequest.setRider(rider);
+        rideRequest.setRideRequestStatus(
+                RideRequestStatus.PENDING
+        );
+
+        double fare =
+                fareCalculationStrategy.calculateFare(
+                        rideRequestDto
+                );
+
+        rideRequest.setFare(fare);
+
+        RideRequest savedRideRequest =
+                rideRequestRepository.save(rideRequest);
+
+        RideRequestDto response =
+                modelMapper.map(
+                        savedRideRequest,
+                        RideRequestDto.class
+                );
+
+        response.setPickupLocation(
+                GeometryUtils.toLocationDto(
+                        savedRideRequest.getPickupLocation()
+                )
+        );
+
+        response.setDropLocation(
+                GeometryUtils.toLocationDto(
+                        savedRideRequest.getDropOffLocation()
+                )
+        );
+
+        response.setFare(savedRideRequest.getFare());
+
+        return response;
     }
 
     @Override
@@ -23,7 +135,10 @@ public class RiderServiceImpl implements RiderService {
     }
 
     @Override
-    public DriverDto rateDriver(Long rideId, Integer rating) {
+    public DriverDto rateDriver(
+            Long rideId,
+            Integer rating
+    ) {
         return null;
     }
 

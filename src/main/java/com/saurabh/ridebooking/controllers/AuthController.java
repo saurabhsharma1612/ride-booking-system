@@ -1,5 +1,7 @@
 package com.saurabh.ridebooking.controllers;
 
+import com.saurabh.ridebooking.dto.LoginRequestDto;
+import com.saurabh.ridebooking.dto.LoginResponseDto;
 import com.saurabh.ridebooking.dto.SignupDto;
 import com.saurabh.ridebooking.dto.UserDto;
 import com.saurabh.ridebooking.services.AuthService;
@@ -21,5 +23,19 @@ public class AuthController {
     public ResponseEntity<UserDto> signup(@RequestBody SignupDto signupDto) {
         UserDto userDto = authService.signup(signupDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDto> login(
+            @RequestBody LoginRequestDto loginRequestDto
+    ) {
+        String accessToken = authService.login(
+                loginRequestDto.getEmail(),
+                loginRequestDto.getPassword()
+        );
+
+        return ResponseEntity.ok(
+                new LoginResponseDto(accessToken)
+        );
     }
 }

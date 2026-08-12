@@ -1,5 +1,6 @@
 package com.saurabh.ridebooking.services.impl;
 
+import com.saurabh.ridebooking.configs.JwtService;
 import com.saurabh.ridebooking.dto.DriverDto;
 import com.saurabh.ridebooking.dto.SignupDto;
 import com.saurabh.ridebooking.dto.UserDto;
@@ -11,6 +12,10 @@ import com.saurabh.ridebooking.repository.RiderRepository;
 import com.saurabh.ridebooking.repository.UserRepository;
 import com.saurabh.ridebooking.repository.WalletRepository;
 import com.saurabh.ridebooking.services.AuthService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,23 +28,23 @@ public class AuthServiceImpl implements AuthService {
     private final RiderRepository riderRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     public AuthServiceImpl(
             UserRepository userRepository,
             RiderRepository riderRepository,
             WalletRepository walletRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService
     ) {
         this.userRepository = userRepository;
         this.riderRepository = riderRepository;
         this.walletRepository = walletRepository;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
-    @Override
-    public String login(String email, String password) {
-        return "";
-    }
 
     @Override
     public UserDto signup(SignupDto signupDto) {
@@ -78,4 +83,22 @@ public class AuthServiceImpl implements AuthService {
     public DriverDto onboardNewDriver(Long userId) {
         return null;
     }
+
+    @Override
+    public String login(String email, String password) {
+
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                email,
+                                password
+                        )
+                );
+
+        UserDetails userDetails =
+                (UserDetails) authentication.getPrincipal();
+
+        return jwtService.generateAccessToken(userDetails);
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.saurabh.ridebooking.services.impl;
 
 import com.saurabh.ridebooking.dto.*;
+import com.saurabh.ridebooking.entities.Ride;
 import com.saurabh.ridebooking.entities.RideRequest;
 import com.saurabh.ridebooking.entities.Rider;
 import com.saurabh.ridebooking.entities.User;
@@ -8,6 +9,7 @@ import com.saurabh.ridebooking.entities.enums.RideRequestStatus;
 import com.saurabh.ridebooking.repository.RideRequestRepository;
 import com.saurabh.ridebooking.repository.RiderRepository;
 import com.saurabh.ridebooking.repository.UserRepository;
+import com.saurabh.ridebooking.services.RideService;
 import com.saurabh.ridebooking.services.RiderService;
 import com.saurabh.ridebooking.strategies.RideFareCalculationStrategy;
 import com.saurabh.ridebooking.utils.GeometryUtils;
@@ -28,6 +30,7 @@ public class RiderServiceImpl implements RiderService {
     private final ModelMapper modelMapper;
     private final RideFareCalculationStrategy fareCalculationStrategy;
     private final GeometryFactory geometryFactory;
+    private final RideService rideService;
 
     public RiderServiceImpl(
             RiderRepository riderRepository,
@@ -35,7 +38,7 @@ public class RiderServiceImpl implements RiderService {
             RideRequestRepository rideRequestRepository,
             ModelMapper modelMapper,
             RideFareCalculationStrategy fareCalculationStrategy,
-            GeometryFactory geometryFactory
+            GeometryFactory geometryFactory, RideService rideService
     ) {
         this.riderRepository = riderRepository;
         this.userRepository = userRepository;
@@ -43,6 +46,7 @@ public class RiderServiceImpl implements RiderService {
         this.modelMapper = modelMapper;
         this.fareCalculationStrategy = fareCalculationStrategy;
         this.geometryFactory = geometryFactory;
+        this.rideService = rideService;
     }
 
     @Override
@@ -124,7 +128,26 @@ public class RiderServiceImpl implements RiderService {
                 )
         );
 
-        response.setFare(savedRideRequest.getFare());
+        response.setFare(
+                savedRideRequest.getFare()
+        );
+
+        Ride assignedRide =
+                rideService.matchWithDrivers(response);
+
+        if (assignedRide != null) {
+            response.setRideRequestStatus(
+                    RideRequestStatus.CONFIRMED
+            );
+
+            response.setRideId(
+                    assignedRide.getId()
+            );
+        } else {
+            response.setRideRequestStatus(
+                    RideRequestStatus.PENDING
+            );
+        }
 
         return response;
     }

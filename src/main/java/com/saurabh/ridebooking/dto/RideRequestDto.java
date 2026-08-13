@@ -14,6 +14,8 @@ public class RideRequestDto {
 
     private Long id;
 
+    private Long rideId;
+
     private LocationDto pickupLocation;
 
     private LocationDto dropLocation;

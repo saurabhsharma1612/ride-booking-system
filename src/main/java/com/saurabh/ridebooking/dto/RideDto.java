@@ -1,22 +1,23 @@
 package com.saurabh.ridebooking.dto;
 
-import com.saurabh.ridebooking.entities.Driver;
-import com.saurabh.ridebooking.entities.Rider;
 import com.saurabh.ridebooking.entities.enums.PaymentMethod;
 import com.saurabh.ridebooking.entities.enums.RideStatus;
-import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.locationtech.jts.geom.Point;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RideDto {
 
     private Long id;
 
-    private Point pickupLocation;
+    private LocationDto pickupLocation;
 
-    private Point dropLocation;
+    private LocationDto dropLocation;
 
     private LocalDateTime createdTime;
 
@@ -33,5 +34,4 @@ public class RideDto {
     private LocalDateTime startedAt;
 
     private LocalDateTime endedAt;
-
 }

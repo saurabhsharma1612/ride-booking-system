@@ -20,13 +20,12 @@ public class DriverMatchingNearestDriverStrategy
     private final GeometryFactory geometryFactory;
 
     public DriverMatchingNearestDriverStrategy(
-            DriverRepository driverRepository, GeometryFactory geometryFactory
+            DriverRepository driverRepository,
+            GeometryFactory geometryFactory
     ) {
         this.driverRepository = driverRepository;
         this.geometryFactory = geometryFactory;
     }
-
-
 
     @Override
     public List<Driver> findMatchingDriver(

@@ -6,6 +6,9 @@ import com.saurabh.ridebooking.entities.RideRequest;
 import com.saurabh.ridebooking.entities.Rider;
 import com.saurabh.ridebooking.entities.User;
 import com.saurabh.ridebooking.entities.enums.RideRequestStatus;
+import com.saurabh.ridebooking.exceptions.ForbiddenException;
+import com.saurabh.ridebooking.exceptions.ResourceNotFoundException;
+import com.saurabh.ridebooking.repository.RideRepository;
 import com.saurabh.ridebooking.repository.RideRequestRepository;
 import com.saurabh.ridebooking.repository.RiderRepository;
 import com.saurabh.ridebooking.repository.UserRepository;
@@ -15,10 +18,12 @@ import com.saurabh.ridebooking.strategies.RideFareCalculationStrategy;
 import com.saurabh.ridebooking.utils.GeometryUtils;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.saurabh.ridebooking.entities.enums.RideStatus;
 
 import java.util.List;
 
@@ -28,6 +33,7 @@ public class RiderServiceImpl implements RiderService {
     private final RiderRepository riderRepository;
     private final UserRepository userRepository;
     private final RideRequestRepository rideRequestRepository;
+    private final RideRepository rideRepository;
     private final ModelMapper modelMapper;
     private final RideFareCalculationStrategy fareCalculationStrategy;
     private final GeometryFactory geometryFactory;
@@ -37,13 +43,16 @@ public class RiderServiceImpl implements RiderService {
             RiderRepository riderRepository,
             UserRepository userRepository,
             RideRequestRepository rideRequestRepository,
+            RideRepository rideRepository,
             ModelMapper modelMapper,
             RideFareCalculationStrategy fareCalculationStrategy,
-            GeometryFactory geometryFactory, RideService rideService
+            GeometryFactory geometryFactory,
+            RideService rideService
     ) {
         this.riderRepository = riderRepository;
         this.userRepository = userRepository;
         this.rideRequestRepository = rideRequestRepository;
+        this.rideRepository = rideRepository;
         this.modelMapper = modelMapper;
         this.fareCalculationStrategy = fareCalculationStrategy;
         this.geometryFactory = geometryFactory;
@@ -65,14 +74,14 @@ public class RiderServiceImpl implements RiderService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "User not found"
                         )
                 );
 
         Rider rider = riderRepository.findByUser(user)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Rider profile not found"
                         )
                 );
@@ -98,6 +107,7 @@ public class RiderServiceImpl implements RiderService {
         );
 
         rideRequest.setRider(rider);
+
         rideRequest.setRideRequestStatus(
                 RideRequestStatus.PENDING
         );
@@ -138,6 +148,7 @@ public class RiderServiceImpl implements RiderService {
                 rideService.matchWithDrivers(response);
 
         if (assignedRide != null) {
+
             response.setRideRequestStatus(
                     RideRequestStatus.CONFIRMED
             );
@@ -145,7 +156,9 @@ public class RiderServiceImpl implements RiderService {
             response.setRideId(
                     assignedRide.getId()
             );
+
         } else {
+
             response.setRideRequestStatus(
                     RideRequestStatus.PENDING
             );
@@ -155,8 +168,39 @@ public class RiderServiceImpl implements RiderService {
     }
 
     @Override
+    @Transactional
     public RideDto cancelRide(Long rideId) {
-        return null;
+
+        Rider rider = getCurrentRider();
+
+        Ride ride = rideService.getRideById(rideId);
+
+        if (ride.getRider() == null
+                || !ride.getRider().getId().equals(rider.getId())) {
+
+            throw new ForbiddenException(
+                    "Ride is not assigned to this rider"
+            );
+        }
+
+        if (ride.getRideStatus() != RideStatus.CONFIRMED) {
+
+            throw new IllegalStateException(
+                    "Only a confirmed ride can be cancelled"
+            );
+        }
+
+        Ride updatedRide =
+                rideService.updateRideStatus(
+                        ride,
+                        RideStatus.CANCELLED
+                );
+
+        if (updatedRide.getDriver() != null) {
+            updatedRide.getDriver().setAvailable(true);
+        }
+
+        return toRideDto(updatedRide);
     }
 
     @Override
@@ -168,12 +212,78 @@ public class RiderServiceImpl implements RiderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RiderDto getMyProfile() {
-        return null;
+
+        Rider rider = getCurrentRider();
+
+        return modelMapper.map(
+                rider,
+                RiderDto.class
+        );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RideDto> getAllMyRides() {
-        return List.of();
+
+        Rider rider = getCurrentRider();
+
+        List<Ride> rides =
+                rideRepository.findByRider(
+                        rider,
+                        PageRequest.of(0, 100)
+                ).getContent();
+
+        return rides.stream()
+                .map(this::toRideDto)
+                .toList();
+    }
+
+    private Rider getCurrentRider() {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found"
+                        )
+                );
+
+        return riderRepository.findByUser(user)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Rider profile not found"
+                        )
+                );
+    }
+
+    private RideDto toRideDto(Ride ride) {
+
+        RideDto rideDto =
+                modelMapper.map(
+                        ride,
+                        RideDto.class
+                );
+
+        rideDto.setPickupLocation(
+                GeometryUtils.toLocationDto(
+                        ride.getPickupLocation()
+                )
+        );
+
+        rideDto.setDropLocation(
+                GeometryUtils.toLocationDto(
+                        ride.getDropOffLocation()
+                )
+        );
+
+        return rideDto;
     }
 }

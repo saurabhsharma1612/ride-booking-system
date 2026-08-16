@@ -7,6 +7,7 @@ import com.saurabh.ridebooking.entities.RideRequest;
 import com.saurabh.ridebooking.entities.Rider;
 import com.saurabh.ridebooking.entities.enums.RideRequestStatus;
 import com.saurabh.ridebooking.entities.enums.RideStatus;
+import com.saurabh.ridebooking.exceptions.ResourceNotFoundException;
 import com.saurabh.ridebooking.repository.DriverRepository;
 import com.saurabh.ridebooking.repository.RideRepository;
 import com.saurabh.ridebooking.repository.RideRequestRepository;
@@ -55,7 +56,7 @@ public class RideServiceImpl implements RideService {
                 rideRequestRepository.findById(
                         rideRequestDto.getId()
                 ).orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Ride request not found"
                         )
                 );
@@ -164,7 +165,7 @@ public class RideServiceImpl implements RideService {
 
         return rideRepository.findById(rideId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Ride not found"
                         )
                 );

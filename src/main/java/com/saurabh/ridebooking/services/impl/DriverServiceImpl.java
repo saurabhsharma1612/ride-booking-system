@@ -7,6 +7,8 @@ import com.saurabh.ridebooking.entities.Driver;
 import com.saurabh.ridebooking.entities.Ride;
 import com.saurabh.ridebooking.entities.User;
 import com.saurabh.ridebooking.entities.enums.RideStatus;
+import com.saurabh.ridebooking.exceptions.ForbiddenException;
+import com.saurabh.ridebooking.exceptions.ResourceNotFoundException;
 import com.saurabh.ridebooking.repository.DriverRepository;
 import com.saurabh.ridebooking.repository.RideRepository;
 import com.saurabh.ridebooking.repository.UserRepository;
@@ -56,14 +58,14 @@ public class DriverServiceImpl implements DriverService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "User not found"
                         )
                 );
 
         return driverRepository.findByUser(user)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Driver profile not found"
                         )
                 );
@@ -89,7 +91,7 @@ public class DriverServiceImpl implements DriverService {
 
         if (ride.getDriver() == null
                 || !ride.getDriver().getId().equals(driver.getId())) {
-            throw new IllegalArgumentException(
+            throw new ForbiddenException(
                     "Ride is not assigned to this driver"
             );
         }

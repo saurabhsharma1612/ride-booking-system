@@ -12,6 +12,8 @@ import com.saurabh.ridebooking.repository.RideRepository;
 import com.saurabh.ridebooking.repository.RideRequestRepository;
 import com.saurabh.ridebooking.repository.RiderRepository;
 import com.saurabh.ridebooking.repository.UserRepository;
+import com.saurabh.ridebooking.services.RatingService;
+import com.saurabh.ridebooking.entities.Driver;
 import com.saurabh.ridebooking.services.RideService;
 import com.saurabh.ridebooking.services.RiderService;
 import com.saurabh.ridebooking.strategies.RideFareCalculationStrategy;
@@ -38,6 +40,7 @@ public class RiderServiceImpl implements RiderService {
     private final RideFareCalculationStrategy fareCalculationStrategy;
     private final GeometryFactory geometryFactory;
     private final RideService rideService;
+    private final RatingService ratingService;
 
     public RiderServiceImpl(
             RiderRepository riderRepository,
@@ -47,7 +50,8 @@ public class RiderServiceImpl implements RiderService {
             ModelMapper modelMapper,
             RideFareCalculationStrategy fareCalculationStrategy,
             GeometryFactory geometryFactory,
-            RideService rideService
+            RideService rideService,
+            RatingService ratingService
     ) {
         this.riderRepository = riderRepository;
         this.userRepository = userRepository;
@@ -57,6 +61,7 @@ public class RiderServiceImpl implements RiderService {
         this.fareCalculationStrategy = fareCalculationStrategy;
         this.geometryFactory = geometryFactory;
         this.rideService = rideService;
+        this.ratingService = ratingService;
     }
 
     @Override
@@ -208,7 +213,20 @@ public class RiderServiceImpl implements RiderService {
             Long rideId,
             Integer rating
     ) {
-        return null;
+
+        Rider rider = getCurrentRider();
+
+        Driver driver =
+                ratingService.rateDriver(
+                        rideId,
+                        rider.getUser(),
+                        rating
+                );
+
+        return modelMapper.map(
+                driver,
+                DriverDto.class
+        );
     }
 
     @Override

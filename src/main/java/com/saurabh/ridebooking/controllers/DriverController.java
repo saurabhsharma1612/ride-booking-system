@@ -2,6 +2,7 @@ package com.saurabh.ridebooking.controllers;
 
 import com.saurabh.ridebooking.dto.DriverDto;
 import com.saurabh.ridebooking.dto.RideDto;
+import com.saurabh.ridebooking.dto.RiderDto;
 import com.saurabh.ridebooking.services.DriverService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -55,4 +56,20 @@ public class DriverController {
                 driverService.endRide(rideId)
         );
     }
+
+    @PutMapping("/rides/{rideId}/rate-rider")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<RiderDto> rateRider(
+            @PathVariable Long rideId,
+            @RequestParam Integer rating
+    ) {
+
+        return ResponseEntity.ok(
+                driverService.rateRider(
+                        rideId,
+                        rating
+                )
+        );
+    }
+
 }

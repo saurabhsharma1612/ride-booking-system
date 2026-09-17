@@ -5,6 +5,7 @@ import com.saurabh.ridebooking.dto.RideDto;
 import com.saurabh.ridebooking.dto.RiderDto;
 import com.saurabh.ridebooking.entities.Driver;
 import com.saurabh.ridebooking.entities.Ride;
+import com.saurabh.ridebooking.entities.Rider;
 import com.saurabh.ridebooking.entities.User;
 import com.saurabh.ridebooking.entities.enums.RideStatus;
 import com.saurabh.ridebooking.exceptions.ForbiddenException;
@@ -13,6 +14,7 @@ import com.saurabh.ridebooking.repository.DriverRepository;
 import com.saurabh.ridebooking.repository.RideRepository;
 import com.saurabh.ridebooking.repository.UserRepository;
 import com.saurabh.ridebooking.services.DriverService;
+import com.saurabh.ridebooking.services.RatingService;
 import com.saurabh.ridebooking.services.RideService;
 import com.saurabh.ridebooking.utils.GeometryUtils;
 import org.modelmapper.ModelMapper;
@@ -32,19 +34,21 @@ public class DriverServiceImpl implements DriverService {
     private final RideRepository rideRepository;
     private final ModelMapper modelMapper;
     private final RideService rideService;
+    private final RatingService ratingService;
 
     public DriverServiceImpl(
             DriverRepository driverRepository,
             UserRepository userRepository,
             RideRepository rideRepository,
             ModelMapper modelMapper,
-            RideService rideService
+            RideService rideService, RatingService ratingService
     ) {
         this.driverRepository = driverRepository;
         this.userRepository = userRepository;
         this.rideRepository = rideRepository;
         this.modelMapper = modelMapper;
         this.rideService = rideService;
+        this.ratingService = ratingService;
     }
 
     private Driver getCurrentDriver() {
@@ -145,8 +149,24 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public RiderDto rateRider(Long rideId, Integer rating) {
-        return null;
+    public RiderDto rateRider(
+            Long rideId,
+            Integer rating
+    ) {
+
+        Driver driver = getCurrentDriver();
+
+        Rider rider =
+                ratingService.rateRider(
+                        rideId,
+                        driver.getUser(),
+                        rating
+                );
+
+        return modelMapper.map(
+                rider,
+                RiderDto.class
+        );
     }
 
     @Override

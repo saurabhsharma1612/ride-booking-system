@@ -7,8 +7,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.locationtech.jts.geom.Point;
-
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -47,5 +48,12 @@ public class Ride {
     private LocalDateTime startedAt;
 
     private LocalDateTime endedAt;
+
+    @OneToMany(
+            mappedBy = "ride",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Rating> ratings = new ArrayList<>();
 
 }

@@ -11,22 +11,31 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(
+        name = "rating",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_rating_ride_rater",
+                columnNames = {"ride_id", "rated_by_id"}
+        )
+)
 public class Rating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ride_id", nullable = false)
     private Ride ride;
 
-    @ManyToOne
-    private Rider rider;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "rated_by_id", nullable = false)
+    private User ratedBy;
 
-    @ManyToOne
-    private Driver driver;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "rated_user_id", nullable = false)
+    private User ratedUser;
 
-    private Integer driverRating;
-
-    private Integer riderRating;
+    @Column(nullable = false)
+    private Integer rating;
 }

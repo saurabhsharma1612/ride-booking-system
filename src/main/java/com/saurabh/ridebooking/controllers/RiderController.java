@@ -1,9 +1,11 @@
 package com.saurabh.ridebooking.controllers;
 
+import com.saurabh.ridebooking.dto.DriverDto;
 import com.saurabh.ridebooking.dto.RideDto;
 import com.saurabh.ridebooking.dto.RideRequestDto;
 import com.saurabh.ridebooking.dto.RiderDto;
 import com.saurabh.ridebooking.services.RiderService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +26,7 @@ public class RiderController {
     @PostMapping("/ride/request")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<RideRequestDto> requestRide(
-            @RequestBody RideRequestDto rideRequestDto
+            @RequestBody @Valid RideRequestDto rideRequestDto
     ) {
 
         RideRequestDto response =
@@ -63,5 +65,20 @@ public class RiderController {
                 riderService.cancelRide(rideId);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/rides/{rideId}/rate-driver")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<DriverDto> rateDriver(
+            @PathVariable Long rideId,
+            @RequestParam Integer rating
+    ) {
+
+        return ResponseEntity.ok(
+                riderService.rateDriver(
+                        rideId,
+                        rating
+                )
+        );
     }
 }

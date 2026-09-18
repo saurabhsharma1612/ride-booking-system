@@ -19,12 +19,12 @@ import com.saurabh.ridebooking.strategies.RideFareCalculationStrategy;
 import com.saurabh.ridebooking.utils.GeometryUtils;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.saurabh.ridebooking.entities.enums.RideStatus;
+import com.saurabh.ridebooking.utils.PaginationUtils;
 
 @Service
 public class RiderServiceImpl implements RiderService {
@@ -240,7 +240,7 @@ public class RiderServiceImpl implements RiderService {
         return PageResponseDto.from(
                 rideService.getAllRidesOfRider(
                         rider,
-                        PageRequest.of(page, size)
+                        PaginationUtils.createPageRequest(page, size)
                 ).map(this::toRideDto)
         );
     }

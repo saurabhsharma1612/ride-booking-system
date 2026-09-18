@@ -18,11 +18,11 @@ import com.saurabh.ridebooking.services.RatingService;
 import com.saurabh.ridebooking.services.RideService;
 import com.saurabh.ridebooking.utils.GeometryUtils;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.saurabh.ridebooking.utils.PaginationUtils;
 
 @Service
 public class DriverServiceImpl implements DriverService {
@@ -114,7 +114,7 @@ public class DriverServiceImpl implements DriverService {
 
         if (ride.getDriver() == null
                 || !ride.getDriver().getId().equals(driver.getId())) {
-            throw new IllegalArgumentException(
+            throw new ForbiddenException(
                     "Ride is not assigned to this driver"
             );
         }
@@ -176,7 +176,7 @@ public class DriverServiceImpl implements DriverService {
         return PageResponseDto.from(
                 rideService.getAllRidesOfDriver(
                         driver,
-                        PageRequest.of(page, size)
+                        PaginationUtils.createPageRequest(page, size)
                 ).map(this::toRideDto)
         );
     }

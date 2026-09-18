@@ -1,14 +1,13 @@
 package com.saurabh.ridebooking.controllers;
 
 import com.saurabh.ridebooking.dto.DriverDto;
+import com.saurabh.ridebooking.dto.PageResponseDto;
 import com.saurabh.ridebooking.dto.RideDto;
 import com.saurabh.ridebooking.dto.RiderDto;
 import com.saurabh.ridebooking.services.DriverService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/driver")
@@ -30,10 +29,13 @@ public class DriverController {
     }
 
     @GetMapping("/rides")
-    public ResponseEntity<List<RideDto>> getAllMyRides() {
+    public ResponseEntity<PageResponseDto<RideDto>> getAllMyRides(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
 
         return ResponseEntity.ok(
-                driverService.getAllMyRides()
+                driverService.getAllMyRides(page, size)
         );
     }
 

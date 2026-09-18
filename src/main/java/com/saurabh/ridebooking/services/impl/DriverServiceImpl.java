@@ -1,6 +1,7 @@
 package com.saurabh.ridebooking.services.impl;
 
 import com.saurabh.ridebooking.dto.DriverDto;
+import com.saurabh.ridebooking.dto.PageResponseDto;
 import com.saurabh.ridebooking.dto.RideDto;
 import com.saurabh.ridebooking.dto.RiderDto;
 import com.saurabh.ridebooking.entities.Driver;
@@ -11,7 +12,6 @@ import com.saurabh.ridebooking.entities.enums.RideStatus;
 import com.saurabh.ridebooking.exceptions.ForbiddenException;
 import com.saurabh.ridebooking.exceptions.ResourceNotFoundException;
 import com.saurabh.ridebooking.repository.DriverRepository;
-import com.saurabh.ridebooking.repository.RideRepository;
 import com.saurabh.ridebooking.repository.UserRepository;
 import com.saurabh.ridebooking.services.DriverService;
 import com.saurabh.ridebooking.services.RatingService;
@@ -24,14 +24,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class DriverServiceImpl implements DriverService {
 
     private final DriverRepository driverRepository;
     private final UserRepository userRepository;
-    private final RideRepository rideRepository;
     private final ModelMapper modelMapper;
     private final RideService rideService;
     private final RatingService ratingService;
@@ -39,13 +36,11 @@ public class DriverServiceImpl implements DriverService {
     public DriverServiceImpl(
             DriverRepository driverRepository,
             UserRepository userRepository,
-            RideRepository rideRepository,
             ModelMapper modelMapper,
             RideService rideService, RatingService ratingService
     ) {
         this.driverRepository = driverRepository;
         this.userRepository = userRepository;
-        this.rideRepository = rideRepository;
         this.modelMapper = modelMapper;
         this.rideService = rideService;
         this.ratingService = ratingService;
@@ -100,12 +95,6 @@ public class DriverServiceImpl implements DriverService {
             );
         }
 
-        if (ride.getRideStatus() != RideStatus.CONFIRMED) {
-            throw new IllegalStateException(
-                    "Only a confirmed ride can be started"
-            );
-        }
-
         Ride updatedRide =
                 rideService.updateRideStatus(
                         ride,
@@ -127,12 +116,6 @@ public class DriverServiceImpl implements DriverService {
                 || !ride.getDriver().getId().equals(driver.getId())) {
             throw new IllegalArgumentException(
                     "Ride is not assigned to this driver"
-            );
-        }
-
-        if (ride.getRideStatus() != RideStatus.ONGOING) {
-            throw new IllegalStateException(
-                    "Only an ongoing ride can be ended"
             );
         }
 
@@ -183,19 +166,19 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RideDto> getAllMyRides() {
+    public PageResponseDto<RideDto> getAllMyRides(
+            int page,
+            int size
+    ) {
 
         Driver driver = getCurrentDriver();
 
-        List<Ride> rides =
-                rideRepository.findByDriver(
+        return PageResponseDto.from(
+                rideService.getAllRidesOfDriver(
                         driver,
-                        PageRequest.of(0, 100)
-                ).getContent();
-
-        return rides.stream()
-                .map(this::toRideDto)
-                .toList();
+                        PageRequest.of(page, size)
+                ).map(this::toRideDto)
+        );
     }
 
     private RideDto toRideDto(Ride ride) {

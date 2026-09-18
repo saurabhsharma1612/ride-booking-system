@@ -1,10 +1,9 @@
 package com.saurabh.ridebooking.services;
 
 import com.saurabh.ridebooking.dto.DriverDto;
+import com.saurabh.ridebooking.dto.PageResponseDto;
 import com.saurabh.ridebooking.dto.RideDto;
 import com.saurabh.ridebooking.dto.RiderDto;
-
-import java.util.List;
 
 public interface DriverService {
 
@@ -20,5 +19,5 @@ public interface DriverService {
 
     DriverDto getMyProfile();
 
-    List<RideDto> getAllMyRides();
+    PageResponseDto<RideDto> getAllMyRides(int page, int size);
 }

@@ -8,7 +8,6 @@ import com.saurabh.ridebooking.entities.User;
 import com.saurabh.ridebooking.entities.enums.RideRequestStatus;
 import com.saurabh.ridebooking.exceptions.ForbiddenException;
 import com.saurabh.ridebooking.exceptions.ResourceNotFoundException;
-import com.saurabh.ridebooking.repository.RideRepository;
 import com.saurabh.ridebooking.repository.RideRequestRepository;
 import com.saurabh.ridebooking.repository.RiderRepository;
 import com.saurabh.ridebooking.repository.UserRepository;
@@ -27,15 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.saurabh.ridebooking.entities.enums.RideStatus;
 
-import java.util.List;
-
 @Service
 public class RiderServiceImpl implements RiderService {
 
     private final RiderRepository riderRepository;
     private final UserRepository userRepository;
     private final RideRequestRepository rideRequestRepository;
-    private final RideRepository rideRepository;
     private final ModelMapper modelMapper;
     private final RideFareCalculationStrategy fareCalculationStrategy;
     private final GeometryFactory geometryFactory;
@@ -46,7 +42,6 @@ public class RiderServiceImpl implements RiderService {
             RiderRepository riderRepository,
             UserRepository userRepository,
             RideRequestRepository rideRequestRepository,
-            RideRepository rideRepository,
             ModelMapper modelMapper,
             RideFareCalculationStrategy fareCalculationStrategy,
             GeometryFactory geometryFactory,
@@ -56,7 +51,6 @@ public class RiderServiceImpl implements RiderService {
         this.riderRepository = riderRepository;
         this.userRepository = userRepository;
         this.rideRequestRepository = rideRequestRepository;
-        this.rideRepository = rideRepository;
         this.modelMapper = modelMapper;
         this.fareCalculationStrategy = fareCalculationStrategy;
         this.geometryFactory = geometryFactory;
@@ -188,13 +182,6 @@ public class RiderServiceImpl implements RiderService {
             );
         }
 
-        if (ride.getRideStatus() != RideStatus.CONFIRMED) {
-
-            throw new IllegalStateException(
-                    "Only a confirmed ride can be cancelled"
-            );
-        }
-
         Ride updatedRide =
                 rideService.updateRideStatus(
                         ride,
@@ -243,19 +230,19 @@ public class RiderServiceImpl implements RiderService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RideDto> getAllMyRides() {
+    public PageResponseDto<RideDto> getAllMyRides(
+            int page,
+            int size
+    ) {
 
         Rider rider = getCurrentRider();
 
-        List<Ride> rides =
-                rideRepository.findByRider(
+        return PageResponseDto.from(
+                rideService.getAllRidesOfRider(
                         rider,
-                        PageRequest.of(0, 100)
-                ).getContent();
-
-        return rides.stream()
-                .map(this::toRideDto)
-                .toList();
+                        PageRequest.of(page, size)
+                ).map(this::toRideDto)
+        );
     }
 
     private Rider getCurrentRider() {

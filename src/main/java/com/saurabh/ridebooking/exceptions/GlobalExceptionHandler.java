@@ -1,5 +1,6 @@
 package com.saurabh.ridebooking.exceptions;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -103,6 +104,22 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex
+    ) {
+
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Database constraint violation"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(error);
     }
 }

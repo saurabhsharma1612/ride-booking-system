@@ -143,6 +143,11 @@ public class RideServiceImpl implements RideService {
             RideStatus rideStatus
     ) {
 
+        validateStatusTransition(
+                ride.getRideStatus(),
+                rideStatus
+        );
+
         ride.setRideStatus(rideStatus);
 
         if (rideStatus == RideStatus.ONGOING) {
@@ -200,5 +205,33 @@ public class RideServiceImpl implements RideService {
         int otp = 100000 + secureRandom.nextInt(900000);
 
         return String.valueOf(otp);
+    }
+
+    private void validateStatusTransition(
+            RideStatus currentStatus,
+            RideStatus newStatus
+    ) {
+
+        boolean valid = switch (currentStatus) {
+
+            case CONFIRMED ->
+                    newStatus == RideStatus.ONGOING
+                            || newStatus == RideStatus.CANCELLED;
+
+            case ONGOING ->
+                    newStatus == RideStatus.ENDED;
+
+            case ENDED, CANCELLED ->
+                    false;
+        };
+
+        if (!valid) {
+            throw new IllegalStateException(
+                    "Invalid ride status transition: "
+                            + currentStatus
+                            + " -> "
+                            + newStatus
+            );
+        }
     }
 }
